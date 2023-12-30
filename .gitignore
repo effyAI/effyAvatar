@@ -21,3 +21,5 @@ app/src/sadTalker/results/*
 app/src/sadTalker/Dockerfile
 app/src/sadTalker/start_docker.sh
 app/src/sadTalker/start.sh
+app/src/utils/__pycache__
+app/src/utils/foul-check
