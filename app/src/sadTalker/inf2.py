@@ -12,9 +12,7 @@ from src.generate_batch import get_data
 from src.generate_facerender_batch import get_facerender_data
 from src.utils.init_path import init_path
 
-
-
-def main(driven_audio, source_image, ref_eyeblink, args):
+def main(driven_audio, source_image, ref_eyeblink, nets, args):
     #torch.backends.cudnn.enabled = False
 
     pic_path = source_image
@@ -30,17 +28,7 @@ def main(driven_audio, source_image, ref_eyeblink, args):
     ref_eyeblink = ref_eyeblink
     ref_pose = args.ref_pose
 
-    # current_root_path = os.path.split(sys.argv[0])[0]
-    current_root_path = 'src/sadTalker'
-
-    sadtalker_paths = init_path(args.checkpoint_dir, os.path.join(current_root_path, 'src/config'), args.size, args.old_version, args.preprocess)
-
-    #init model
-    preprocess_model = CropAndExtract(sadtalker_paths, device)
-
-    audio_to_coeff = Audio2Coeff(sadtalker_paths,  device)
-    
-    animate_from_coeff = AnimateFromCoeff(sadtalker_paths, device)
+    preprocess_model, audio_to_coeff, animate_from_coeff = nets
 
     #crop image and extract 3dmm from image
     first_frame_dir = os.path.join(save_dir, 'first_frame_dir')
@@ -102,48 +90,17 @@ def main(driven_audio, source_image, ref_eyeblink, args):
 
     return talking_video
 
-def lip_sync(driven_audio, source_image, working_dir, ref_eyeblink):
-    default_args = {
-        # "driven_audio": './examples/driven_audio/bus_chinese.wav',
-        # "source_image": './examples/source_image/full_body_1.png',
-        # "ref_eyeblink": None,
-        "ref_pose": None,
-        "checkpoint_dir": 'src/sadTalker/checkpoints',
-        "result_dir": working_dir,
-        "pose_style": 0,
-        "batch_size": 10,
-        "size": 256,
-        "expression_scale": 1.0,
-        "input_yaw": None,
-        "input_pitch": None,
-        "input_roll": None,
-        "enhancer": '',
-        "background_enhancer": None,
-        "cpu": False,
-        "face3dvis": False,
-        "still": True,
-        "preprocess": 'full',
-        "verbose": False,
-        "old_version": False,
-        "net_recon": 'resnet50',
-        "init_path": None,
-        "use_last_fc": False,
-        "bfm_folder": './checkpoints/BFM_Fitting/',
-        "bfm_model": 'BFM_model_front.mat',
-        "focal": 1015.0,
-        "center": 112.0,
-        "camera_d": 10.0,
-        "z_near": 5.0,
-        "z_far": 15.0
-    }
+def lip_sync(driven_audio, source_image, working_dir, ref_eyeblink,enhance=False, nets=None, sad_args=None):
 
-    args = Namespace(**default_args)
+    if sad_args == None:
+        sys.path.append('src/utils')
+        from utils import get_sadtalker_nets, get_sadtalker_args
+        sad_args, nets = get_sadtalker_nets(get_sadtalker_args())
 
-    if torch.cuda.is_available() and not args.cpu:
-        args.device = "cuda"
-    else:
-        args.device = "cpu"
+    if enhance:
+        sad_args.enhancer = 'gfpgan'
 
-    return main(driven_audio, source_image, ref_eyeblink, args)
+    sad_args.result_dir = working_dir
+    return main(driven_audio, source_image, ref_eyeblink, nets, sad_args)
 
 # print('talking video path: ', lip_sync( './examples/driven_audio/bus_chinese.wav', './examples/source_image/full_body_1.png', None))

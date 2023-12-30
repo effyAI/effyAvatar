@@ -1,2 +1,2 @@
-file '/home/ubuntu/image2avatar/app/src/results-1/2023_12_30_16.52.31.mp4'
+file '/home/ubuntu/image2avatar/app/src/results-2/2023_12_30_17.29.03.mp4'
 file 'pre_ready_videos/talking_santa2.mp4'
